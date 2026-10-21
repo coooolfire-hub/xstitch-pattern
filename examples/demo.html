@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xstitch-pattern demo</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 880px; padding: 0 1rem; }
+  label { margin-right: 1rem; }
+  #out { margin-top: 1.5rem; overflow-x: auto; }
+  table { border-collapse: collapse; margin-top: 1rem; }
+  td, th { border: 1px solid #ccc; padding: 4px 10px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border: 1px solid #999; vertical-align: middle; margin-right: 6px; }
+  .sym { font-size: 1.1em; text-align: center; }
+</style>
+</head>
+<body>
+<h1>xstitch-pattern demo</h1>
+<p>Pick an image, get a cross-stitch chart with a printable symbol for every color. Everything runs locally in your browser.</p>
+<p>Note: this page uses ES modules, so open it through a static server (for example run <code>npx serve .</code> in the project folder), not by double-clicking the file.</p>
+<p>
+  <input type="file" id="file" accept="image/*">
+  <label>Grid width <input type="number" id="gw" value="64" min="8" max="160" style="width:5em"></label>
+  <label>Max colors <input type="number" id="mc" value="16" min="2" max="24" style="width:4em"></label>
+  <label>Mode
+    <select id="mode">
+      <option value="color" selected>Color</option>
+      <option value="bw">Black and white (print)</option>
+    </select>
+  </label>
+  <button id="go">Generate</button>
+</p>
+<div id="out"></div>
+<script type="module">
+  import { imageDataToChart, chartToSVG } from '../src/index.js';
+  import { genericFloss } from '../palettes/generic-floss.js';
+
+  const out = document.getElementById('out');
+  document.getElementById('go').addEventListener('click', () => {
+    const f = document.getElementById('file').files[0];
+    if (!f) { out.textContent = 'Choose an image first.'; return; }
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = img.naturalWidth;
+      cv.height = img.naturalHeight;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, cv.width, cv.height);
+      const c = imageDataToChart(data.data, cv.width, cv.height, {
+        gridWidth: parseInt(document.getElementById('gw').value, 10),
+        maxColors: parseInt(document.getElementById('mc').value, 10),
+        palette: genericFloss,
+      });
+      let html = chartToSVG(c, { mode: document.getElementById('mode').value });
+      html += '<p>' + c.gridWidth + ' x ' + c.gridHeight + ' stitches, ' + c.totalStitches + ' total, ' + c.legend.length + ' colors</p>';
+      html += '<table><tr><th>Symbol</th><th>Code</th><th>Name</th><th>Stitches</th><th>Skeins (est.)</th></tr>';
+      for (const e of c.legend) {
+        html += '<tr><td class="sym">' + e.symbol + '</td><td><span class="sw" style="background:rgb(' + e.rgb.join(',') + ')"></span>' + e.code + '</td><td>' + e.name + '</td><td>' + e.stitches + '</td><td>' + e.skeins.toFixed(1) + '</td></tr>';
+      }
+      html += '</table>';
+      out.innerHTML = html;
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(f);
+  });
+</script>
+</body>
+</html>
