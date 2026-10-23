@@ -1,5 +1,7 @@
 # xstitch-pattern
 
+[![npm version](https://img.shields.io/npm/v/xstitch-pattern.svg)](https://www.npmjs.com/package/xstitch-pattern) [![npm downloads](https://img.shields.io/npm/dm/xstitch-pattern.svg)](https://www.npmjs.com/package/xstitch-pattern)
+
 Turn any image into a **cross-stitch chart**: palette-mapped stitch grid
 where every color gets a **unique printable symbol** (so charts stay
 readable when printed in black and white), plus a legend with floss usage
